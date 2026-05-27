@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card auth-card">
+  <h1>ログイン</h1>
+  <form method="post">
+    <label>ユーザーID</label>
+    <input type="text" name="username" required autocomplete="username">
+
+    <label>パスワード</label>
+    <input type="password" name="password" required>
+
+    <button type="submit">ログイン</button>
+  </form>
+
+  <p class="muted">
+    アカウントがない場合は
+    <a href="{{ url_for('register') }}">新規登録</a>
+  </p>
+
+    <p class="muted">
+    <a href="{{ url_for('forgot_password') }}">パスワードを忘れた方はこちら</a>
+  </p>
+</div>
+{% endblock %}

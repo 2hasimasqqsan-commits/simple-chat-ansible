@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Simple Chat</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a href="{{ url_for('groups') }}">Simple Chat</a>
+  </div>
+  <nav>
+    {% if current_user %}
+      <span>{{ current_user.username }}</span>
+      <a href="{{ url_for('logout') }}">ログアウト</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">ログイン</a>
+      <a href="{{ url_for('register') }}">登録</a>
+    {% endif %}
+  </nav>
+</header>
+
+<main class="container">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">
+        {% for message in messages %}
+          <div>{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

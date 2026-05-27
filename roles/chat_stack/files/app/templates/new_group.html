@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+  <h1>グループ作成</h1>
+  <form method="post">
+    <label>グループ名</label>
+    <input type="text" name="name" required>
+
+    <label>説明</label>
+    <textarea name="description" rows="4"></textarea>
+
+    <button type="submit">作成</button>
+  </form>
+</div>
+{% endblock %}

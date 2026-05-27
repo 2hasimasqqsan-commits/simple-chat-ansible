@@ -1,0 +1,33 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: simple-chat-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: "{{ db_root_password }}"
+      MARIADB_DATABASE: "{{ db_name }}"
+      MARIADB_USER: "{{ db_user }}"
+      MARIADB_PASSWORD: "{{ db_password }}"
+      TZ: "{{ timezone }}"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  minio:
+    image: minio/minio:latest
+    container_name: simple-chat-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: "{{ minio_access_key }}"
+      MINIO_ROOT_PASSWORD: "{{ minio_secret_key }}"
+      TZ: "{{ timezone }}"
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"

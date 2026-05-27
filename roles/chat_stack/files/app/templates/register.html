@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card auth-card">
+  <h1>新規登録</h1>
+  <form method="post">
+    <label>ユーザー名</label>
+    <input type="text" name="username" required autocomplete="username">
+
+    <label>メールアドレス</label>
+    <input type="email" name="email" required>
+
+    <label>パスワード</label>
+    <input type="password" name="password" required>
+
+    <button type="submit">登録</button>
+  </form>
+
+  <p class="muted">
+    すでにアカウントがある場合は
+    <a href="{{ url_for('login') }}">ログイン</a>
+  </p>
+</div>
+{% endblock %}

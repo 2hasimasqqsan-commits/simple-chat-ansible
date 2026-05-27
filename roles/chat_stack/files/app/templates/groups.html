@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+  <h1>グループ</h1>
+  <a class="button-link" href="{{ url_for('new_group') }}">+ グループ作成</a>
+</div>
+
+{% if groups %}
+  <div class="group-list">
+    {% for group in groups %}
+      <a class="group-card" href="{{ url_for('group_chat', group_id=group.id) }}">
+        <h2>{{ group.name }}</h2>
+        <p>{{ group.description or "説明なし" }}</p>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card">
+    <p>まだ参加しているグループがありません。</p>
+    <a href="{{ url_for('new_group') }}">最初のグループを作成する</a>
+  </div>
+{% endif %}
+{% endblock %}

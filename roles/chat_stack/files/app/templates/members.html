@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>メンバー管理</h1>
+    <p>{{ group.name }}</p>
+  </div>
+
+  <div class="page-actions">
+    <a class="button-link" href="{{ url_for('group_chat', group_id=group.id) }}">チャットへ戻る</a>
+
+    {% if not owner %}
+      <form method="post"
+            action="{{ url_for('leave_group', group_id=group.id) }}"
+            onsubmit="return confirm('このグループから退出しますか？');"
+            class="inline-form">
+        <button type="submit" class="danger-button">グループ退出</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>現在のメンバー</h2>
+
+  {% if members %}
+    <table class="member-table">
+      <thead>
+        <tr>
+          <th>ユーザー名</th>
+          <th>メール</th>
+          <th>権限</th>
+          <th>参加日時</th>
+	  <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for member in members %}
+          <tr>
+            <td>{{ member.username }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.role }}</td>
+            <td>{{ member.joined_at }}</td>
+	    <td>
+              {% if owner and member.role != "owner" %}
+                <form method="post"
+                      action="{{ url_for('remove_group_member', group_id=group.id, target_user_id=member.id) }}"
+                      onsubmit="return confirm('このメンバーをグループから削除しますか？');"
+                      class="inline-form">
+                 <button type="submit" class="danger-button">削除</button>
+                </form>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>メンバーがいません。</p>
+  {% endif %}
+</div>
+
+{% if owner %}
+  <div class="card member-add-card">
+    <h2>メンバー追加</h2>
+
+    {% if candidates %}
+      <form method="post" action="{{ url_for('add_group_member', group_id=group.id) }}">
+        <label>追加するユーザー</label>
+        <select name="user_id" required>
+          <option value="">選択してください</option>
+          {% for user in candidates %}
+            <option value="{{ user.id }}">
+              {{ user.username }} / {{ user.email }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit">追加</button>
+      </form>
+    {% else %}
+      <p>追加できるユーザーはいません。</p>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card member-add-card">
+    <p>メンバー追加は owner のみ可能です。</p>
+  </div>
+{% endif %}
+{% endblock %}

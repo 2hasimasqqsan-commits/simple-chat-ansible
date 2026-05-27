@@ -1,0 +1,6 @@
+Flask
+gunicorn
+PyMySQL
+minio
+python-dotenv
+Werkzeug

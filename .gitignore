@@ -1,0 +1,36 @@
+# Ansible secrets
+group_vars/all.yml
+host_vars/*/vault.yml
+vault.yml
+*.vault.yml
+
+# Runtime / generated env files
+.env
+*.env
+app.env
+
+# Cloudflare / certificates / keys
+*.json
+*.pem
+*.key
+*.crt
+
+# Ansible
+*.retry
+.ansible/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs
+*.log
+logs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

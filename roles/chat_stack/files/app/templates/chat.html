@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-layout">
+  <section class="chat-main">
+    <div class="chat-header">
+      <h1>{{ group.name }}</h1>
+      <p>{{ group.description or "" }}</p>
+    </div>
+
+    <div class="messages" id="messages" data-group-id="{{ group.id }}">
+      {% for message in messages %}
+        <div class="message" data-message-id="{{ message.id }}">
+	<div class="message-meta">
+         <div>
+           <strong>{{ message.username }}</strong>
+           <span>{{ message.created_at }}</span>
+         </div>
+
+       {% if message.user_id == current_user.id or owner %}
+         <form method="post"
+               action="{{ url_for('delete_message', message_id=message.id) }}"
+               onsubmit="return confirm('このメッセージを削除しますか？');"
+               class="delete-message-form">
+           <button type="submit" class="delete-message-button">削除</button>
+         </form>
+      {% endif %}
+       </div>
+
+          {% if message.body %}
+            <div class="message-body">{{ message.body }}</div>
+          {% endif %}
+
+          {% if message.attachment_id %}
+            <div class="attachment">
+              <a href="{{ url_for('view_attachment', attachment_id=message.attachment_id) }}"
+                 class="image-open"
+                 data-caption="{{ message.original_filename }}"
+                 target="_blank">
+                <img src="{{ url_for('view_attachment', attachment_id=message.attachment_id) }}" alt="{{ message.original_filename }}">
+             </a>
+           </div>
+         {% endif %}
+
+        </div>
+      {% endfor %}
+    </div>
+
+    <form class="send-form" method="post" enctype="multipart/form-data" action="{{ url_for('send_message', group_id=group.id) }}">
+      <textarea name="body" rows="3" placeholder="メッセージを入力"></textarea>
+      <input id="imageInput" type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp">
+      <div id="pastePreview" class="paste-preview"></div>
+      <p class="paste-hint">スクリーンショットをコピーして、この画面で Ctrl + V すると画像添付できます。</p>
+      <button type="submit">送信</button>
+    </form>
+  </section>
+
+  <aside class="members">
+    <h2>メンバー</h2>
+    <p>
+
+    <a href="{{ url_for('group_members', group_id=group.id) }}">メンバー管理</a>
+    </p>
+
+      {% if not owner %}
+        <form method="post"
+              action="{{ url_for('leave_group', group_id=group.id) }}"
+              onsubmit="return confirm('このグループから退出しますか？');"
+              class="leave-group-form">
+          <button type="submit" class="danger-button">グループ退出</button>
+        </form>
+      {% endif %}
+
+      {% for member in members %}
+      <div class="member">
+        {{ member.username }}
+        <span>{{ member.role }}</span>
+      </div>
+    {% endfor %}
+  </aside>
+</div>
+
+<div id="imageModal" class="image-modal">
+  <div class="image-modal-content">
+    <button type="button" id="imageModalClose" class="image-modal-close">×</button>
+    <img id="imageModalImg" src="" alt="preview">
+    <div id="imageModalCaption" class="image-modal-caption"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const messagesBox = document.getElementById("messages");
+  const imageInput = document.getElementById("imageInput");
+  const pastePreview = document.getElementById("pastePreview");
+  if (!messagesBox) return;
+
+  const groupId = messagesBox.dataset.groupId;
+
+  function getLastMessageId() {
+    const items = messagesBox.querySelectorAll(".message[data-message-id]");
+    if (items.length === 0) return 0;
+    return parseInt(items[items.length - 1].dataset.messageId || "0", 10);
+  }
+
+  function escapeHtml(value) {
+    if (!value) return "";
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function appendMessage(message) {
+    if (document.querySelector(`.message[data-message-id="${message.id}"]`)) {
+      return;
+    }
+
+    const div = document.createElement("div");
+    div.className = "message";
+    div.dataset.messageId = message.id;
+
+    let deleteButton = "";
+
+    if (message.can_delete) {
+      deleteButton = `
+        <form method="post"
+              action="/messages/${message.id}/delete"
+              onsubmit="return confirm('このメッセージを削除しますか？');"
+              class="delete-message-form">
+          <button type="submit" class="delete-message-button">削除</button>
+        </form>
+     `;
+    }
+
+    let html = `
+      <div class="message-meta">
+        <div>
+          <strong>${escapeHtml(message.username)}</strong>
+          <span>${escapeHtml(message.created_at)}</span>
+        </div>
+        ${deleteButton}
+      </div>
+    `;
+
+    if (message.body) {
+      html += `<div class="message-body">${escapeHtml(message.body)}</div>`;
+    }
+
+    if (message.attachment_url) {
+      html += `
+        <div class="attachment">
+          <a href="${message.attachment_url}" target="_blank">
+            <img src="${message.attachment_url}" alt="${escapeHtml(message.original_filename || "")}">
+          </a>
+        </div>
+      `;
+    }
+
+    if (message.attachment_url) {
+      const filename = escapeHtml(message.original_filename || "");
+      html += `
+        <div class="attachment">
+          <a href="${message.attachment_url}"
+             class="image-open"
+             data-caption="${filename}"
+             target="_blank">
+            <img src="${message.attachment_url}" alt="${filename}">
+          </a>
+        </div>
+      `;
+    }
+
+    div.innerHTML = html;
+    messagesBox.appendChild(div);
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+
+  function removeDeletedMessages(activeIds) {
+    if (!Array.isArray(activeIds)) return;
+
+    const activeSet = new Set(activeIds.map(String));
+    const items = messagesBox.querySelectorAll(".message[data-message-id]");
+
+    for (const item of items) {
+      const id = item.dataset.messageId;
+      if (!activeSet.has(id)) {
+        item.remove();
+      }
+    }
+  }
+
+  async function pollMessages() {
+    const lastId = getLastMessageId();
+
+    try {
+      const res = await fetch(`/api/groups/${groupId}/messages?after_id=${lastId}`, {
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      removeDeletedMessages(data.active_ids);
+
+      for (const message of data.messages) {
+        appendMessage(message);
+      }
+    } catch (e) {
+      console.log("poll failed", e);
+    }
+  }
+
+  messagesBox.scrollTop = messagesBox.scrollHeight;
+
+document.addEventListener("paste", function (event) {
+  if (!imageInput) return;
+
+  const items = event.clipboardData && event.clipboardData.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (!file) return;
+
+      const ext = item.type.split("/")[1] || "png";
+      const pastedFile = new File(
+        [file],
+        `pasted-screenshot-${Date.now()}.${ext}`,
+        { type: item.type }
+      );
+
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(pastedFile);
+      imageInput.files = dataTransfer.files;
+
+      if (pastePreview) {
+        const url = URL.createObjectURL(pastedFile);
+        pastePreview.innerHTML = `
+          <div class="preview-card">
+            <div class="preview-title">貼り付け画像</div>
+            <img src="${url}" alt="pasted image preview">
+            <button type="button" id="clearPastedImage">添付を解除</button>
+          </div>
+        `;
+
+        const clearButton = document.getElementById("clearPastedImage");
+        if (clearButton) {
+          clearButton.addEventListener("click", function () {
+            imageInput.value = "";
+            pastePreview.innerHTML = "";
+          });
+        }
+      }
+
+      event.preventDefault();
+      break;
+    }
+  }
+});
+
+const imageModal = document.getElementById("imageModal");
+const imageModalImg = document.getElementById("imageModalImg");
+const imageModalCaption = document.getElementById("imageModalCaption");
+const imageModalClose = document.getElementById("imageModalClose");
+
+function openImageModal(src, caption) {
+  if (!imageModal || !imageModalImg) return;
+
+  imageModalImg.src = src;
+  imageModalCaption.textContent = caption || "";
+  imageModal.classList.add("active");
+  document.body.classList.add("modal-open");
+}
+
+function closeImageModal() {
+  if (!imageModal || !imageModalImg) return;
+
+  imageModal.classList.remove("active");
+  imageModalImg.src = "";
+  imageModalCaption.textContent = "";
+  document.body.classList.remove("modal-open");
+}
+
+document.addEventListener("click", function (event) {
+  const link = event.target.closest(".image-open");
+  if (!link) return;
+
+  event.preventDefault();
+
+  const img = link.querySelector("img");
+  const src = link.getAttribute("href") || (img ? img.src : "");
+  const caption = link.dataset.caption || (img ? img.alt : "");
+
+  openImageModal(src, caption);
+});
+
+if (imageModalClose) {
+  imageModalClose.addEventListener("click", closeImageModal);
+}
+
+if (imageModal) {
+  imageModal.addEventListener("click", function (event) {
+    if (event.target === imageModal) {
+      closeImageModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    closeImageModal();
+  }
+});
+  setInterval(pollMessages, 2000);
+})();
+</script>
+{% endblock %}

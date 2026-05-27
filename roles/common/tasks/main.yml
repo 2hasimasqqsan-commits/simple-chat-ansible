@@ -1,0 +1,27 @@
+---
+- name: Set timezone
+  ansible.builtin.timezone:
+    name: "{{ timezone }}"
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - git
+      - vim
+      - tree
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - software-properties-common
+    state: present
+    update_cache: true
+
+- name: Ensure /etc/hosts entries for chat servers
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} SIMPLE CHAT HOSTS"
+    block: |
+      {{ chat_app_ip }} {{ chat_app_host }} target-chat-app01
+      {{ chat_data_ip }} {{ chat_data_host }} target-chat-data01

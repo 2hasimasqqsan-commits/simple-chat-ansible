@@ -1,0 +1,30 @@
+---
+- name: Configure common settings
+  hosts: chat_all
+  become: true
+  roles:
+    - common
+
+- name: Install Docker on all chat servers
+  hosts: chat_all
+  become: true
+  roles:
+    - docker
+
+- name: Deploy data stack
+  hosts: chat_data
+  become: true
+  roles:
+    - data_stack
+
+- name: Deploy chat app stack
+  hosts: chat_app
+  become: true
+  roles:
+    - chat_stack
+
+- name: Configure Cloudflared
+  hosts: chat_app
+  become: true
+  roles:
+    - cloudflared

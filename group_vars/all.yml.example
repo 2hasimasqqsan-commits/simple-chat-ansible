@@ -1,0 +1,48 @@
+---
+timezone: "Asia/Tokyo"
+
+# Project
+project_name: "simple-chat"
+app_root: "/opt/simple-chat"
+
+# Internal hosts
+chat_app_host: "target-chat-app01.example.jp"
+chat_data_host: "target-chat-data01.example.jp"
+
+chat_app_ip: "192.168.1.231"
+chat_data_ip: "192.168.1.232"
+
+# App
+flask_env: "production"
+flask_secret_key: "CHANGE_ME_SECRET_KEY"
+
+# Database
+db_host: "192.168.1.232"
+db_port: 3306
+db_name: "simple_chat"
+db_user: "simple_chat_user"
+db_password: "CHANGE_ME_DB_PASSWORD"
+db_root_password: "CHANGE_ME_DB_ROOT_PASSWORD"
+
+# MinIO
+minio_endpoint: "192.168.1.232:9000"
+minio_console_port: 9001
+minio_bucket: "chat-uploads"
+minio_access_key: "CHANGE_ME_MINIO_ACCESS_KEY"
+minio_secret_key: "CHANGE_ME_MINIO_SECRET_KEY"
+minio_secure: false
+
+# SMTP / Brevo
+mail_server: "smtp-relay.brevo.com"
+mail_port: 587
+mail_use_tls: true
+mail_username: "CHANGE_ME_BREVO_SMTP_LOGIN"
+mail_password: "CHANGE_ME_BREVO_SMTP_KEY"
+mail_default_sender: "no-reply@example.com"
+
+# Cloudflare Tunnel
+cloudflared_enable: false
+cloudflared_tunnel_uuid: "CHANGE_ME_TUNNEL_UUID"
+cloudflared_credentials_file: "/etc/cloudflared/CHANGE_ME_TUNNEL_UUID.json"
+cloudflared_hostname: "chat.example.com"
+cloudflared_service: "http://localhost:8080"
