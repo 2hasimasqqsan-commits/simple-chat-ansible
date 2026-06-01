@@ -1,13 +1,31 @@
 # simple-chat-ansible
 
-Ansible project for deploying a lightweight group chat application on Ubuntu 24.04.
+Ansible project for deploying a lightweight self-hosted group chat application on Ubuntu Server 24.04.
+
+This project demonstrates how to deploy a small web application stack using Ansible, Docker Compose, nginx, Flask, MariaDB, MinIO, Cloudflare Tunnel, and SMTP-based email delivery.
 
 ## Overview
 
 This project deploys a simple self-hosted group chat system using a two-VM architecture.
 
+The system supports user registration, user ID based login, password reset email, group creation, member management, text chat, image upload, screenshot paste upload, image preview, message deletion, and external publishing through Cloudflare Tunnel.
+
+The main purpose of this project is to demonstrate:
+
+- Web application deployment automation with Ansible
+- Docker Compose based application deployment
+- Flask application hosting behind nginx
+- MariaDB persistence
+- MinIO object storage for uploaded images
+- Cloudflare Tunnel based external publishing
+- SMTP integration for password reset email
+
+## Architecture
+
 ```text
 Internet
+  |
+  | HTTPS
   |
 Cloudflare Tunnel
   |
@@ -19,61 +37,173 @@ chat-app01
 chat-data01
   - MariaDB
   - MinIO
-Features
-User registration
-User ID based login
-Password reset email via Brevo SMTP
-Group creation
-Member invitation
-Member removal
-Group leave
-Text chat
-Image upload
-Screenshot paste upload
-Image modal preview
-Message deletion
-Lightweight polling-based auto update
-MariaDB persistence
-MinIO object storage
-Cloudflare Tunnel external publishing
-Tech Stack
-Ansible
-Docker Compose
-nginx
-Flask
-MariaDB
-MinIO
-Cloudflare Tunnel
-Brevo SMTP
-Tested Environment
-Ubuntu Server 24.04
-Ansible 2.14+
-Docker / Docker Compose v2
-MariaDB 11 container
-MinIO container
-Python 3.12 Flask app container
-nginx container
-Directory Structure
+```
+
+## Screenshots / Verification
+
+This section shows screenshots and verification results for the deployed simple chat application.
+
+For security reasons, IP addresses, hostnames, URLs, usernames, email addresses, and environment-specific values may be masked in the screenshots.
+
+### Ansible Playbook Result
+
+![Ansible playbook result](docs/images/ansible-playbook-result.png)
+
+This screenshot shows the Ansible playbook execution result.
+
+The playbook deploys the data stack, chat application stack, and Cloudflare Tunnel configuration.
+
+### Cloudflare Tunnel Status
+
+![Cloudflare Tunnel status](docs/images/cloudflare-tunnel-status.png)
+
+This screenshot verifies the Cloudflare Tunnel configuration or service status for publishing the application externally.
+
+Cloudflare Tunnel is used to expose the chat application without directly opening inbound ports on the server.
+
+### Login Page
+
+![Login page](docs/images/login-page.png)
+
+This screenshot shows the login page for the Simple Chat application.
+
+The application supports user ID based login and account registration.
+
+### Password Reset Flow
+
+![Password reset flow](docs/images/password-reset.png)
+
+This screenshot shows the password reset workflow.
+
+The application sends a password reset email through SMTP and allows the user to set a new password using a reset URL.
+
+### Group Chat Page
+
+![Group chat page](docs/images/chat-group-page.png)
+
+This screenshot shows the group chat page.
+
+The application supports group-based messaging, member display, member management, group leave, and message deletion.
+
+### Image Upload
+
+![Image upload](docs/images/image-upload.png)
+
+This screenshot shows image upload and screenshot paste upload functionality.
+
+Users can attach an image file or paste a screenshot directly into the chat form.
+
+### Image Upload Preview
+
+![Image upload preview](docs/images/image-upload-preview.png)
+
+This screenshot shows image preview and modal display functionality after an image is uploaded to the chat.
+
+Uploaded images are stored in object storage and displayed from the chat interface.
+
+### MinIO Object Storage
+
+![MinIO bucket](docs/images/minio-bucket.png)
+
+This screenshot shows the MinIO bucket used for uploaded chat images.
+
+The application stores uploaded images in MinIO object storage instead of keeping them only on the application container filesystem.
+
+## Features
+
+- User registration
+- User ID based login
+-Password reset email via Brevo SMTP
+-Group creation
+- Member invitation
+- Member removal
+- Group leave
+- Text chat
+- Image upload
+- Screenshot paste upload
+- Image modal preview
+- Message deletion
+- Lightweight polling-based auto update
+- MariaDB persistence
+- MinIO object storage
+- Cloudflare Tunnel external publishing
+
+## Tech Stack
+
+- Ansible
+- Docker Compose
+- nginx
+- Flask
+- MariaDB
+- MinIO
+- Cloudflare Tunnel
+- Brevo SMTP
+
+## Tested Environment
+
+- Ubuntu Server 24.04
+- Ansible 2.14+
+- Docker / Docker Compose v2
+- MariaDB 11 container
+- MinIO container
+- Python 3.12 Flask app container
+- nginx container
+
+## Directory Structure
+
+```text
 simple-chat-ansible/
+├── README.md
 ├── ansible.cfg
 ├── inventory.ini
-├── site.yml
 ├── group_vars/
 │   └── all.yml.example
-└── roles/
-    ├── common/
-    ├── docker/
-    ├── data_stack/
-    ├── chat_stack/
-    └── cloudflared/
-Setup
+├── roles/
+│   ├── chat_stack/
+│   │   ├── files/
+│   │   │   ├── app/
+│   │   │   │   ├── Dockerfile
+│   │   │   │   ├── app.py
+│   │   │   │   ├── requirements.txt
+│   │   │   │   ├── static/
+│   │   │   │   │   └── style.css
+│   │   │   │   └── templates/
+│   │   │   │       ├── base.html
+│   │   │   │       ├── chat.html
+│   │   │   │       ├── forgot_password.html
+│   │   │   │       ├── groups.html
+│   │   │   │       ├── login.html
+│   │   │   │       ├── members.html
+│   │   │   │       ├── new_group.html
+│   │   │   │       ├── register.html
+│   │   │   │       └── reset_password.html
+│   │   │   └── nginx/
+│   │   │       └── default.conf
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   └── templates/
+│   │       ├── app.env.j2
+│   │       └── docker-compose.yml.j2
+│   ├── cloudflared/
+│   ├── common/
+│   ├── data_stack/
+│   └── docker/
+└── site.yml
+```
+
+## Setup
 
 Copy the example variables file:
 
+```bash
 cp group_vars/all.yml.example group_vars/all.yml
+```
 
-Edit group_vars/all.yml and set your own values.
+Edit `group_vars/all.yml` and set your own values.
 
+Example values:
+
+```yaml
 flask_secret_key: "CHANGE_ME_SECRET_KEY"
 
 db_password: "CHANGE_ME_DB_PASSWORD"
@@ -88,12 +218,16 @@ mail_default_sender: "no-reply@example.com"
 
 cloudflared_tunnel_uuid: "CHANGE_ME_TUNNEL_UUID"
 cloudflared_hostname: "chat.example.com"
-Inventory Example
+```
+
+## Inventory Example
+
+```ini
 [chat_app]
-target-chat-app01.example.jp
+target-chat-app01.example.local
 
 [chat_data]
-target-chat-data01.example.jp
+target-chat-data01.example.local
 
 [chat_all:children]
 chat_app
@@ -102,82 +236,87 @@ chat_data
 [chat_all:vars]
 ansible_user=ansible
 ansible_become=true
-Deploy
+```
+
+## Deploy
 
 Check syntax:
 
+```bash
 ansible-playbook site.yml --syntax-check
+```
 
 Deploy all roles:
 
+```bash
 ansible-playbook site.yml
+```
 
 Deploy only the data stack:
 
+```bash
 ansible-playbook site.yml --limit chat_data
+```
 
 Deploy only the app stack:
 
+```bash
 ansible-playbook site.yml --limit chat_app
-Cloudflare Tunnel
+```
+
+## Cloudflare Tunnel
 
 Create a Cloudflare Tunnel manually first.
 
 Place the tunnel credentials JSON on the app host:
 
+```text
 /etc/cloudflared/<TUNNEL_UUID>.json
+```
 
-Then configure these variables in group_vars/all.yml:
+Then configure these variables in `group_vars/all.yml`:
 
+```yaml
 cloudflared_enable: true
 cloudflared_tunnel_name: "simple-chat"
 cloudflared_tunnel_uuid: "<TUNNEL_UUID>"
 cloudflared_credentials_file: "/etc/cloudflared/<TUNNEL_UUID>.json"
 cloudflared_hostname: "chat.example.com"
 cloudflared_service: "http://localhost:8080"
-Security Notes
+```
+
+## Security Notes
 
 Do not commit secrets.
 
 The following files are intentionally ignored:
 
-group_vars/all.yml
-.env
-app.env
-Cloudflare credentials JSON
-certificate/key files
+- `group_vars/all.yml`
+- `.env`
+- `app.env`
+- Cloudflare credentials JSON
+- certificate files
+- private key files
 
-Before publishing, check for secrets:
+Before publishing, check for secret files:
 
+```bash
 find . -type f \( -name "*.env" -o -name "*.json" -o -name "*.pem" -o -name "*.key" -o -name "*.crt" \) -print
-License
+```
+
+Also check for sensitive strings:
+
+```bash
+grep -R -nE 'password|passwd|secret|token|api|key|private|vault|Authorization|Bearer' .
+```
+
+## Notes
+
+This project is for lab, learning, and portfolio demonstration.
+
+Additional security hardening, monitoring, backup, logging, and operational review are required for production use.
+
+## License
 
 MIT
 
-
----
-
-## 3. LICENSE を作成
-
-```bash
-vi LICENSE
-MIT License
-
-Copyright (c) 2026 Masahiro Hashimoto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files, to deal in the Software
-without restriction, including without limitation the rights to use, copy,
-modify, merge, publish, distribute, sublicense, and/or sell copies of the
-Software, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
